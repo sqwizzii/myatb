@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вхід</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container mt-4">
+    <h1 class="text-center">Вхід</h1>
+    <form id="loginForm" class="col-6 mx-auto" novalidate>
+      <input type="email" id="email" placeholder="Email" class="form-control mb-2" required>
+      <input type="password" id="password" placeholder="Пароль" class="form-control mb-2" required>
+      <button type="submit" class="btn btn-primary">Увійти</button>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    const form = document.getElementById('loginForm');
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await axios.post('https://lohika.itstep.click/api/account/login', { email, password });
+        const token = res.data.token;
+
+        let user = { email, token };
+
+        const savedUser = JSON.parse(localStorage.getItem('user'));
+        if (savedUser && savedUser.email === email) {
+          user.firstName = savedUser.firstName;
+          user.secondName = savedUser.secondName;
+          user.phone = savedUser.phone;
+          user.photo = savedUser.photo;
+        } else {
+          try {
+            const profileRes = await axios.get('https://lohika.itstep.click/api/account/profile', {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            const profile = profileRes.data;
+            user = { ...user, ...profile };
+          } catch {
+            console.warn('Не вдалося отримати дані профілю від сервера.');
+          }
+        }
+
+        localStorage.setItem('user', JSON.stringify(user));
+        window.location.href = '/profile.html';
+      } catch {
+        alert('Помилка входу: перевірте email і пароль');
+      }
+    });
+  </script>
+</body>
+</html>

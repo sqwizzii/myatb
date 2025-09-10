@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Особистий кабінет</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container mt-4">
+    <h1>Особистий кабінет</h1>
+    <p><b>Ім’я:</b> <span id="firstName"></span></p>
+    <p><b>Прізвище:</b> <span id="secondName"></span></p>
+    <p><b>Email:</b> <span id="email"></span></p>
+    <p><b>Телефон:</b> <span id="phone"></span></p>
+    <div class="mt-3">
+      <img id="avatar" style="max-width:150px; border-radius:10px;">
+    </div>
+    <hr>
+    <button id="logout" class="btn btn-danger">Вийти</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const logoutBtn = document.getElementById("logout");
+      logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("user");
+        window.location.href = "/login.html";
+      });
+
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (!user || !user.token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      document.getElementById('email').textContent = user.email;
+
+      if (user.firstName && user.secondName) {
+        document.getElementById('firstName').textContent = user.firstName;
+        document.getElementById('secondName').textContent = user.secondName;
+        document.getElementById('phone').textContent = user.phone || '';
+        if (user.photo) document.getElementById('avatar').src = user.photo;
+      } else {
+        axios.get('https://lohika.itstep.click/api/account/profile', {
+          headers: { Authorization: `Bearer ${user.token}` }
+        })
+        .then(resp => {
+          const profile = resp.data;
+          document.getElementById('firstName').textContent = profile.firstName || '';
+          document.getElementById('secondName').textContent = profile.secondName || '';
+          document.getElementById('phone').textContent = profile.phone || '';
+          
+          if (profile.photo) {
+            document.getElementById('avatar').src = profile.photo;
+          } else if (user.photo) {
+            document.getElementById('avatar').src = user.photo;
+          }
+
+          const updatedUser = { ...user, ...profile };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        })
+        .catch(err => {
+          console.error('Помилка отримання профілю:', err);
+          alert('Не вдалося завантажити дані профілю. Будь ласка, увійдіть ще раз.');
+          localStorage.removeItem('user');
+          window.location.href = '/login.html';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

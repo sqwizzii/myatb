@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Реєстрація</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container mt-4">
+    <h1 class="text-center">Реєстрація</h1>
+    <form id="registerForm" class="col-6 mx-auto" novalidate>
+      <input type="text" id="firstName" placeholder="Ім’я" class="form-control mb-2" required>
+      <input type="text" id="secondName" placeholder="Прізвище" class="form-control mb-2" required>
+      <input type="email" id="email" placeholder="Email" class="form-control mb-2" required>
+      <input type="text" id="phone" placeholder="Телефон" class="form-control mb-2" required>
+      <input type="file" id="photo" accept="image/*" class="form-control mb-2" required>
+      <input type="password" id="password" placeholder="Пароль" class="form-control mb-2" required>
+      <input type="password" id="confirmPassword" placeholder="Підтвердження пароля" class="form-control mb-2" required>
+      <button type="submit" class="btn btn-primary">Зареєструватись</button>
+    </form>
+  </div>
+
+  <script src="https://unpkg.com/imask"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    IMask(document.getElementById('phone'), { mask: '+380 (00) 000-00-00' });
+
+    const form = document.getElementById('registerForm');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const firstName = document.getElementById('firstName').value.trim();
+      const secondName = document.getElementById('secondName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const file = document.getElementById('photo').files[0];
+
+      if (password !== confirmPassword) {
+        alert('Пароль і підтвердження не співпадають');
+        return;
+      }
+
+      if (!file || !file.type.startsWith('image/')) {
+        alert('Оберіть файл зображення');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Файл завеликий. Максимум 5 МБ.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const photoBase64 = e.target.result;
+
+        const userData = { firstName, secondName, email, phone, photo: photoBase64 };
+
+        axios.post('https://lohika.itstep.click/api/account/register', {
+          firstName, secondName, email, phone, password, confirmPassword, photo: photoBase64
+        })
+        .then(resp => {
+          userData.token = resp.data.token || '';
+          localStorage.setItem('user', JSON.stringify(userData));
+          window.location.href = '/profile.html';
+        })
+        .catch(err => {
+          alert('Помилка реєстрації');
+          console.error(err);
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  </script>
+</body>
+</html>
