@@ -17,13 +17,14 @@
       <input type="file" id="photo" accept="image/*" class="form-control mb-2" required>
       <input type="password" id="password" placeholder="Пароль" class="form-control mb-2" required>
       <input type="password" id="confirmPassword" placeholder="Підтвердження пароля" class="form-control mb-2" required>
-      <button type="submit" class="btn btn-primary">Зареєструватись</button>
+      <button type="submit" class="btn btn-primary w-100">Зареєструватись</button>
     </form>
   </div>
 
   <script src="https://unpkg.com/imask"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
+    // Маска для телефону
     IMask(document.getElementById('phone'), { mask: '+380 (00) 000-00-00' });
 
     const form = document.getElementById('registerForm');
@@ -39,11 +40,13 @@
       const confirmPassword = document.getElementById('confirmPassword').value;
       const file = document.getElementById('photo').files[0];
 
+      // Перевірка паролів
       if (password !== confirmPassword) {
         alert('Пароль і підтвердження не співпадають');
         return;
       }
 
+      // Перевірка фото
       if (!file || !file.type.startsWith('image/')) {
         alert('Оберіть файл зображення');
         return;
@@ -58,21 +61,39 @@
       reader.onload = function(e) {
         const photoBase64 = e.target.result;
 
-        const userData = { firstName, secondName, email, phone, photo: photoBase64 };
+        // Дані користувача
+        const newUser = {
+          firstName,
+          secondName,
+          email,
+          phone,
+          photo: photoBase64,
+          password
+        };
 
+        // Відправка на сервер (опціонально)
         axios.post('https://lohika.itstep.click/api/account/register', {
           firstName, secondName, email, phone, password, confirmPassword, photo: photoBase64
         })
         .then(resp => {
-          userData.token = resp.data.token || '';
-          localStorage.setItem('user', JSON.stringify(userData));
-          window.location.href = '/profile.html';
+          newUser.token = resp.data.token || '';
+
+          // Отримати масив користувачів або створити новий
+          let users = JSON.parse(localStorage.getItem('users')) || [];
+          users.push(newUser);
+
+          // Зберегти назад у localStorage
+          localStorage.setItem('users', JSON.stringify(users));
+
+          // Перехід на сторінку зі списком
+          window.location.href = '/json.html';
         })
         .catch(err => {
           alert('Помилка реєстрації');
           console.error(err);
         });
       };
+
       reader.readAsDataURL(file);
     });
   </script>
