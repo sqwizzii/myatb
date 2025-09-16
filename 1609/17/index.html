@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Пошук користувачів</title>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f8f9fa;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #343a40;
+    }
+
+    /* Поле пошуку */
+    .search-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .search-container input {
+      width: 300px;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      outline: none;
+      transition: 0.3s;
+    }
+
+    .search-container input:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    }
+
+    /* Таблиця */
+    table {
+      width: 80%;
+      margin: 0 auto;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    th {
+      background: #343a40;
+      color: white;
+      text-transform: uppercase;
+      font-size: 14px;
+    }
+
+    tr:hover {
+      background: #f1f3f5;
+    }
+
+    /* Повідомлення, коли немає результатів */
+    #noResults {
+      text-align: center;
+      color: #6c757d;
+      margin-top: 15px;
+      font-size: 16px;
+    }
+
+    /* Loader */
+    .loader {
+      display: none;
+      text-align: center;
+      margin-top: 10px;
+      color: #007bff;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Пошук користувачів</h1>
+
+  <!-- Поле пошуку -->
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Введіть ім'я або email користувача...">
+  </div>
+
+  <!-- Loader -->
+  <div class="loader" id="loader">Завантаження...</div>
+
+  <!-- Таблиця результатів -->
+  <table>
+    <thead>
+      <tr>
+        <th>Id</th>
+        <th>Ім'я</th>
+        <th>Email</th>
+        <th>Телефон</th>
+      </tr>
+    </thead>
+    <tbody id="usersTableBody">
+      <tr>
+        <td colspan="4">Введіть текст для пошуку...</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Повідомлення, якщо немає результатів -->
+  <p id="noResults" style="display: none;">Нічого не знайдено</p>
+
+  <script>
+    
+    $(function () {
+      const $searchInput = $("#searchInput");
+      const $usersTableBody = $("#usersTableBody");
+      const $loader = $("#loader");
+      const $noResults = $("#noResults");
+
+      let typingTimer;
+      const typingDelay = 400; // Затримка перед запитом (мс)
+
+      // Функція для відображення користувачів у таблиці
+      function renderUsers(users) {
+        $usersTableBody.empty();
+        users.forEach(user => {
+          const row = `
+            <tr>
+              <td>${user.id}</td>
+              <td>${user.name}</td>
+              <td>${user.email}</td>
+              <td>${user.phone ?? "-"}</td>
+            </tr>
+          `;
+          $usersTableBody.append(row);
+        });
+      }
+
+      // Обробник введення тексту
+      $searchInput.on("input", function () {
+        clearTimeout(typingTimer);
+        const query = $searchInput.val().trim();
+
+        if (query.length === 0) {
+          $usersTableBody.html(`
+            <tr><td colspan="4">Введіть текст для пошуку...</td></tr>
+          `);
+          $noResults.hide();
+          return;
+        }
+
+        typingTimer = setTimeout(() => {
+          $loader.show();
+          $noResults.hide();
+
+          $.ajax({
+            url: `https://lohika.itstep.click/api/Users/search`,
+            type: "GET",
+            data: { term: query },
+            success: function (data) {
+              $loader.hide();
+              
+              if (data && data.length > 0) {
+                renderUsers(data);
+              } else {
+                $usersTableBody.empty();
+                $noResults.show();
+              }
+            },
+            error: function () {
+              $loader.hide();
+              $usersTableBody.html(`
+                <tr><td colspan="4" style="color: red;">Помилка завантаження даних</td></tr>
+              `);
+            }
+          });
+        }, typingDelay);
+      });
+    });
+  </script>
+</body>
+</html>

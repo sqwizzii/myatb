@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Список користувачів з jQuery</title>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Список користувачів</h1>
+
+  <div class="add-user-form">
+    <input type="text" id="userName" placeholder="Ім'я">
+    <input type="email" id="userEmail" placeholder="Email">
+    <button id="addUserBtn">Додати користувача</button>
+  </div>
+  <p class="error" id="errorMsg"></p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Id</th>
+        <th>Ім'я</th>
+        <th>Email</th>
+        <th>Дія</th>
+      </tr>
+    </thead>
+    <tbody id="bodyUsers"></tbody>
+  </table>
+
+  <div id="modalOverlay" class="modal-overlay">
+    <div class="modal">
+      <h3>Підтвердження видалення</h3>
+      <p id="modalText">Ви впевнені, що хочете видалити цього користувача?</p>
+      <button class="btn-yes" id="confirmYes">Yes</button>
+      <button class="btn-cancel" id="confirmCancel">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    $(function () {
+      const users = [
+        { id: 1, name: "Іван", email: "ivan@gmail.com" },
+        { id: 2, name: "Оксана", email: "oksana@gmail.com" },
+        { id: 3, name: "Вова", email: "novakvova@gmail.com" }
+      ];
+
+      const bodyUsers = $("#bodyUsers");
+      let currentId = users.length;
+
+
+      function renderUser(user) {
+        const html = `
+          <tr data-id="${user.id}">
+            <td>${user.id}</td>
+            <td>${user.name}</td>
+            <td>${user.email}</td>
+            <td><button class="delete-btn">Delete</button></td>
+          </tr>
+        `;
+        bodyUsers.append(html);
+      }
+
+
+      users.forEach(renderUser);
+
+      $("#addUserBtn").click(function () {
+        const name = $("#userName").val().trim();
+        const email = $("#userEmail").val().trim();
+        const errorMsg = $("#errorMsg");
+
+        if (name === "" || email === "") {
+          errorMsg.text("Будь ласка, заповніть всі поля.");
+          return;
+        }
+
+        errorMsg.text("");
+
+        currentId++;
+        const newUser = { id: currentId, name: name, email: email };
+        renderUser(newUser);
+
+        $("#userName").val("");
+        $("#userEmail").val("");
+      });
+
+      let rowToDelete = null;
+
+      $("#bodyUsers").on("click", ".delete-btn", function () {
+        rowToDelete = $(this).closest("tr");
+        const userName = rowToDelete.find("td:eq(1)").text();
+        $("#modalText").text(`Ви впевнені, що хочете видалити користувача: "${userName}"?`);
+        $("#modalOverlay").fadeIn(200);
+      });
+
+      $("#confirmYes").click(function () {
+        if (rowToDelete) {
+          rowToDelete.remove();
+          rowToDelete = null;
+        }
+        $("#modalOverlay").fadeOut(200);
+      });
+
+      $("#confirmCancel").click(function () {
+        rowToDelete = null;
+        $("#modalOverlay").fadeOut(200);
+      });
+
+      $("#modalOverlay").click(function (e) {
+        if (e.target.id === "modalOverlay") {
+          rowToDelete = null;
+          $("#modalOverlay").fadeOut(200);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
