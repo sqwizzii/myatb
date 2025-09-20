@@ -3,116 +3,120 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Список користувачів з jQuery</title>
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <link rel="stylesheet" href="style.css">
+  <title>Створення новини</title>
+
+  <!-- Підключаємо TinyMCE з твоїм API ключем -->
+<script src="https://cdn.tiny.cloud/1/wgoci0mz2lujee9vo418rz8fk4u1dtbjqgcst3ncvyyq79m8/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
+
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .news-list {
+      margin-top: 30px;
+    }
+    .news-item {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    .news-item h3 {
+      margin: 0 0 10px 0;
+    }
+  </style>
 </head>
 <body>
-  <h1>Список користувачів</h1>
+  <div class="container">
+    <h1>Створення новини</h1>
+    <form id="newsForm">
+      <label for="title">Заголовок:</label>
+      <input type="text" id="title" placeholder="Введіть заголовок" required>
 
-  <div class="add-user-form">
-    <input type="text" id="userName" placeholder="Ім'я">
-    <input type="email" id="userEmail" placeholder="Email">
-    <button id="addUserBtn">Додати користувача</button>
-  </div>
-  <p class="error" id="errorMsg"></p>
+      <label for="editor">Текст новини:</label>
+      <textarea id="editor"></textarea>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Id</th>
-        <th>Ім'я</th>
-        <th>Email</th>
-        <th>Дія</th>
-      </tr>
-    </thead>
-    <tbody id="bodyUsers"></tbody>
-  </table>
+      <button type="submit">Створити новину</button>
+    </form>
 
-  <div id="modalOverlay" class="modal-overlay">
-    <div class="modal">
-      <h3>Підтвердження видалення</h3>
-      <p id="modalText">Ви впевнені, що хочете видалити цього користувача?</p>
-      <button class="btn-yes" id="confirmYes">Yes</button>
-      <button class="btn-cancel" id="confirmCancel">Cancel</button>
+    <div class="news-list" id="newsList">
+      <h2>Опубліковані новини:</h2>
     </div>
   </div>
 
   <script>
-    $(function () {
-      const users = [
-        { id: 1, name: "Іван", email: "ivan@gmail.com" },
-        { id: 2, name: "Оксана", email: "oksana@gmail.com" },
-        { id: 3, name: "Вова", email: "novakvova@gmail.com" }
-      ];
+    // Ініціалізація TinyMCE
+    tinymce.init({
+      selector: '#editor',
+      plugins: 'image link lists table code fullscreen',
+      toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image | code fullscreen',
+      height: 300,
+      language: 'uk'
+    });
 
-      const bodyUsers = $("#bodyUsers");
-      let currentId = users.length;
+    const form = document.getElementById('newsForm');
+    const newsList = document.getElementById('newsList');
 
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
 
-      function renderUser(user) {
-        const html = `
-          <tr data-id="${user.id}">
-            <td>${user.id}</td>
-            <td>${user.name}</td>
-            <td>${user.email}</td>
-            <td><button class="delete-btn">Delete</button></td>
-          </tr>
-        `;
-        bodyUsers.append(html);
+      const title = document.getElementById('title').value.trim();
+      const content = tinymce.get('editor').getContent();
+
+      if (!title || !content) {
+        alert('Будь ласка, заповніть усі поля!');
+        return;
       }
 
+      const newsItem = document.createElement('div');
+      newsItem.classList.add('news-item');
+      newsItem.innerHTML = `
+        <h3>${title}</h3>
+        <div class="content">${content}</div>
+      `;
 
-      users.forEach(renderUser);
+      newsList.appendChild(newsItem);
 
-      $("#addUserBtn").click(function () {
-        const name = $("#userName").val().trim();
-        const email = $("#userEmail").val().trim();
-        const errorMsg = $("#errorMsg");
-
-        if (name === "" || email === "") {
-          errorMsg.text("Будь ласка, заповніть всі поля.");
-          return;
-        }
-
-        errorMsg.text("");
-
-        currentId++;
-        const newUser = { id: currentId, name: name, email: email };
-        renderUser(newUser);
-
-        $("#userName").val("");
-        $("#userEmail").val("");
-      });
-
-      let rowToDelete = null;
-
-      $("#bodyUsers").on("click", ".delete-btn", function () {
-        rowToDelete = $(this).closest("tr");
-        const userName = rowToDelete.find("td:eq(1)").text();
-        $("#modalText").text(`Ви впевнені, що хочете видалити користувача: "${userName}"?`);
-        $("#modalOverlay").fadeIn(200);
-      });
-
-      $("#confirmYes").click(function () {
-        if (rowToDelete) {
-          rowToDelete.remove();
-          rowToDelete = null;
-        }
-        $("#modalOverlay").fadeOut(200);
-      });
-
-      $("#confirmCancel").click(function () {
-        rowToDelete = null;
-        $("#modalOverlay").fadeOut(200);
-      });
-
-      $("#modalOverlay").click(function (e) {
-        if (e.target.id === "modalOverlay") {
-          rowToDelete = null;
-          $("#modalOverlay").fadeOut(200);
-        }
-      });
+      form.reset();
+      tinymce.get('editor').setContent('');
     });
   </script>
 </body>
