@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gallery</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+  <div class="container">
+    <h1 class="text-center my-4">Галерея</h1>
+
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="mb-3">
+          <label for="speed" class="form-label">Швидкість (мс)</label>
+          <input type="number" class="form-control" id="speed" value="1000" min="100">
+        </div>
+      </div>
+
+      <div class="col-md-3 d-flex align-items-end">
+        <button class="btn btn-success me-2" id="btnSetSpeed">Застосувати</button>
+        <button class="btn btn-danger" id="btnStop">Стоп</button>
+      </div>
+    </div>
+
+    <div id="gallery" class="text-center">
+      <!-- Photos will be inserted here -->
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <script>
+    $(() => {
+      const photos = [
+        "/images/1.jpg",
+        "/images/2.jpg",
+        "/images/3.jpg",
+        "/images/4.jpg",
+        "/images/5.jpg"
+      ];
+
+      let i = 0; // Індекс поточного фото
+      let intervalId; // Зберігаємо ID setInterval
+
+      const speedInput = $("#speed");
+      const btnSetSpeed = $("#btnSetSpeed");
+      const btnStop = $("#btnStop");
+
+      // Функція показу зображення
+      const showImage = () => {
+        const img = `<img src="${photos[i]}" width="300" alt="Photo ${i + 1}" class="rounded shadow">`;
+        $("#gallery").html(img);
+
+        // Перехід до наступного фото
+        i = (i + 1) % photos.length;
+      };
+
+      // Застосування нової швидкості
+      btnSetSpeed.on("click", () => {
+        const speed = parseInt(speedInput.val());
+        if (isNaN(speed) || speed <= 0) {
+          alert("Введіть коректне позитивне число для швидкості!");
+          return;
+        }
+        clearInterval(intervalId); // Очищаємо попередній інтервал
+        intervalId = setInterval(showImage, speed); // Стартуємо з новою швидкістю
+      });
+
+      // Кнопка стоп
+      btnStop.on("click", () => {
+        clearInterval(intervalId); // Зупиняємо слайдшоу
+      });
+
+      // Старт показу з дефолтною швидкістю
+      intervalId = setInterval(showImage, speedInput.val());
+    });
+  </script>
+</body>
+
+</html>

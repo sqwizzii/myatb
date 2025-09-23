@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Прогноз погоди</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: #f0f8ff;
+      font-family: Arial, sans-serif;
+    }
+    .weather-icon {
+      width: 80px;
+      height: 80px;
+    }
+    .forecast-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      padding: 15px;
+      text-align: center;
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-5">
+    <h1 class="text-center mb-4">Прогноз погоди</h1>
+
+    <div class="mb-4 text-center">
+      <input type="text" id="cityInput" class="form-control w-50 d-inline" placeholder="Введіть місто" value="Kyiv">
+      <button id="getWeather" class="btn btn-primary">Показати</button>
+    </div>
+
+    <div id="currentWeather" class="text-center mb-5"></div>
+
+    <div class="row justify-content-center" id="forecast"></div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    const apiKey = "180b29b54c6e4997877144231252309"; 
+
+    $(document).ready(function() {
+      $("#getWeather").click(function() {
+        const city = $("#cityInput").val().trim();
+        if (!city) {
+          alert("Будь ласка, введіть назву міста!");
+          return;
+        }
+
+        getWeather(city);
+      });
+
+      function getWeather(city) {
+        $.getJSON(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=5&lang=uk`, function(data) {
+          console.log(data);
+
+          const current = `
+            <h2>${data.location.name}, ${data.location.country}</h2>
+            <p>Оновлено: ${data.current.last_updated}</p>
+            <img src="${data.current.condition.icon}" class="weather-icon" alt="icon">
+            <p class="fs-4">${data.current.temp_c}°C - ${data.current.condition.text}</p>
+            <p>Вітер: ${data.current.wind_kph} км/год | Опади: ${data.current.precip_mm} мм | Тиск: ${data.current.pressure_mb} мбар</p>
+          `;
+          $("#currentWeather").html(current);
+
+          let forecastHTML = "";
+          data.forecast.forecastday.forEach(day => {
+            const date = new Date(day.date);
+            const options = { weekday: 'long', day: 'numeric', month: 'long' };
+            const dayName = date.toLocaleDateString('uk-UA', options);
+
+            forecastHTML += `
+              <div class="col-md-2 forecast-card">
+                <h5>${dayName}</h5>
+                <img src="${day.day.condition.icon}" class="weather-icon" alt="icon">
+                <p>${day.day.avgtemp_c}°C</p>
+                <small>${day.day.condition.text}</small>
+              </div>
+            `;
+          });
+          $("#forecast").html(forecastHTML);
+        }).fail(function() {
+          alert("Не вдалося отримати прогноз. Перевірте назву міста або ключ API!");
+        });
+      }
+
+      getWeather("Kyiv");
+    });
+  </script>
+</body>
+</html>
