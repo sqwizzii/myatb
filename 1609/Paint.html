@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paint</title>
+  <style>
+    body {
+      background: #f9f0e8;
+      text-align: center;
+      font-family: Arial, sans-serif;
+    }
+    #toolbar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+      gap: 20px;
+      border-bottom: 2px solid #ccc;
+    }
+    .shape, .color {
+      cursor: pointer;
+      border: 2px solid #ccc;
+      width: 30px;
+      height: 30px;
+    }
+    .selected {
+      border: 2px solid black;
+    }
+    #drawingArea {
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h2>PAINT</h2>
+
+  <div id="toolbar">
+    <div class="shape" data-shape="square" style="background: lightgray;"></div>
+    <div class="shape" data-shape="circle" style="background: lightgray; border-radius: 50%;"></div>
+    <div class="shape" data-shape="diamond" style="background: lightgray; transform: rotate(45deg);"></div>
+    <div class="shape" data-shape="triangle" style="background: lightgray; clip-path: polygon(0 100%, 100% 100%, 0 0);"></div>
+
+    <div class="color" style="background: white;" data-color="white"></div>
+    <div class="color" style="background: black;" data-color="black"></div>
+    <div class="color" style="background: yellow;" data-color="yellow"></div>
+    <div class="color" style="background: orange;" data-color="orange"></div>
+    <div class="color" style="background: green;" data-color="green"></div>
+    <div class="color" style="background: blue;" data-color="blue"></div>
+    <div class="color" style="background: red;" data-color="red"></div>
+    <div class="color" style="background: violet;" data-color="violet"></div>
+  </div>
+
+  <canvas id="drawingArea" width="600" height="400"></canvas>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      const canvas = $("#drawingArea")[0];
+      const ctx = canvas.getContext("2d");
+
+      let currentShape = "square";
+      let currentColor = "black";
+      let isDrawing = false;
+      let startX = 0, startY = 0;
+
+      $(".shape").click(function () {
+        $(".shape").removeClass("selected");
+        $(this).addClass("selected");
+        currentShape = $(this).data("shape");
+      });
+
+      $(".color").click(function () {
+        $(".color").removeClass("selected");
+        $(this).addClass("selected");
+        currentColor = $(this).data("color");
+      });
+
+      $("#drawingArea").mousedown(function (e) {
+        isDrawing = true;
+        const rect = canvas.getBoundingClientRect();
+        startX = e.clientX - rect.left;
+        startY = e.clientY - rect.top;
+      });
+
+      $("#drawingArea").mouseup(function (e) {
+        if (!isDrawing) return;
+        const rect = canvas.getBoundingClientRect();
+        const endX = e.clientX - rect.left;
+        const endY = e.clientY - rect.top;
+        const width = endX - startX;
+        const height = endY - startY;
+
+        ctx.fillStyle = currentColor;
+        drawShape(ctx, currentShape, startX, startY, width, height);
+
+        isDrawing = false;
+      });
+
+      function drawShape(ctx, shape, x, y, w, h) {
+        ctx.beginPath();
+        switch (shape) {
+          case "square":
+            ctx.fillRect(x, y, w, h);
+            break;
+          case "circle":
+            ctx.arc(x + w / 2, y + h / 2, Math.abs(w / 2), 0, Math.PI * 2);
+            ctx.fill();
+            break;
+          case "diamond":
+            ctx.moveTo(x + w / 2, y);
+            ctx.lineTo(x + w, y + h / 2);
+            ctx.lineTo(x + w / 2, y + h);
+            ctx.lineTo(x, y + h / 2);
+            ctx.closePath();
+            ctx.fill();
+            break;
+          case "triangle":
+            ctx.moveTo(x, y + h);
+            ctx.lineTo(x + w, y + h);
+            ctx.lineTo(x, y);
+            ctx.closePath();
+            ctx.fill();
+            break;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
