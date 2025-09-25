@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Форми з валідацією</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://parsleyjs.org/src/parsley.css" rel="stylesheet">
+  <style>
+    body {
+      background: #f5f7fa;
+      font-family: Arial, sans-serif;
+    }
+
+    .error-message {
+      color: red;
+      font-size: 0.9em;
+      margin-left: 10px;
+    }
+
+    .form-section {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+
+    table {
+      margin-top: 20px;
+    }
+
+    .avatar-preview {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-5">
+  <h1 class="text-center mb-4">Parsley.js</h1>
+  <div class="form-section">
+    <h3>Форма реєстрації</h3>
+    <form id="registerForm">
+      <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" id="username" name="username" class="form-control"
+               required
+               data-parsley-minlength="4"
+               data-parsley-maxlength="20"
+               data-parsley-username-forbidden
+               data-parsley-trigger="focusout"
+               data-parsley-required-message="Username is required"
+               data-parsley-minlength-message="Min length is 4 characters"
+               data-parsley-maxlength-message="Max length is 20 characters"
+               data-parsley-username-forbidden-message="Username admin or user or test is not allowed">
+      </div>
+
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" id="email" name="email" class="form-control"
+               required
+               data-parsley-type="email"
+               data-parsley-trigger="focusout"
+               data-parsley-required-message="Email is required"
+               data-parsley-type-message="Enter a valid email address">
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" id="password" name="password" class="form-control"
+               required
+               data-parsley-minlength="6"
+               data-parsley-maxlength="30"
+               data-parsley-trigger="focusout"
+               data-parsley-required-message="Password is required"
+               data-parsley-minlength-message="Min length is 6 characters"
+               data-parsley-maxlength-message="Max length is 30 characters">
+      </div>
+
+      <div class="mb-3">
+        <label for="repeat" class="form-label">Repeat Password</label>
+        <input type="password" id="repeat" name="repeat" class="form-control"
+               required
+               data-parsley-equalto="#password"
+               data-parsley-trigger="focusout"
+               data-parsley-required-message="Repeat is required"
+               data-parsley-equalto-message="The passwords must match">
+      </div>
+
+      <button type="submit" class="btn btn-primary">Register</button>
+    </form>
+
+    <div id="registerResult"></div>
+  </div>
+
+  <div class="form-section">
+    <h3>Інформація про користувача</h3>
+    <form id="userInfoForm">
+      <div class="mb-3">
+        <label for="fullName" class="form-label">Full Name</label>
+        <input type="text" id="fullName" name="fullName" class="form-control"
+               required
+               data-parsley-minlength="2"
+               data-parsley-maxlength="50"
+               data-parsley-pattern="^[A-Za-zА-Яа-яЁёІіЇїЄє\s\-]+$"
+               data-parsley-trigger="focusout"
+               data-parsley-required-message="Full name is required"
+               data-parsley-minlength-message="Min length is 2 characters"
+               data-parsley-maxlength-message="Max length is 50 characters"
+               data-parsley-pattern-message="Full name may only contain letters, spaces, and dashes">
+      </div>
+
+      <div class="mb-3">
+        <label for="avatar" class="form-label">Avatar</label>
+        <input type="file" id="avatar" name="avatar" class="form-control"
+               required
+               data-parsley-required-message="Avatar is required"
+               data-parsley-trigger="change">
+      </div>
+
+      <div class="mb-3">
+        <label for="birthday" class="form-label">Birthday</label>
+        <input type="date" id="birthday" name="birthday" class="form-control"
+               required
+               data-parsley-required-message="Birthday is required"
+               data-parsley-birthday-min
+               data-parsley-trigger="change">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Gender</label>
+        <select id="gender" name="gender" class="form-select" required
+                data-parsley-required-message="Gender is required">
+          <option value="">-- Оберіть стать --</option>
+          <option value="Male">Чоловіча</option>
+          <option value="Female">Жіноча</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-success">Save</button>
+    </form>
+
+    <div id="userInfoResult"></div>
+  </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://parsleyjs.org/dist/parsley.min.js"></script>
+
+<script>
+  window.Parsley.addValidator('usernameForbidden', {
+    validateString: function(value) {
+      const forbidden = ['admin', 'user', 'test'];
+      return !forbidden.includes(value.toLowerCase());
+    }
+  });
+
+  window.Parsley.addValidator('birthdayMin', {
+    validateString: function(value) {
+      const minDate = new Date('1900-01-01');
+      return new Date(value) >= minDate;
+    },
+    messages: {
+      en: 'Min birthday is 01/01/1900'
+    }
+  });
+  function getPasswordStrength(password) {
+    const hasDigits = /\d/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasUpper = /[A-Z]/.test(password);
+    const hasSpecial = /[^a-zA-Z0-9]/.test(password);
+
+    if ((hasDigits && !hasLower && !hasUpper && !hasSpecial) ||
+        (!hasDigits && (hasLower ^ hasUpper))) {
+      return "Very easy";
+    }
+    if (hasDigits && (hasLower ^ hasUpper)) {
+      return "Easy";
+    }
+    if (hasDigits && hasLower && hasUpper && !hasSpecial) {
+      return "Normal";
+    }
+    if (hasDigits && hasLower && hasUpper && hasSpecial) {
+      return "Hard";
+    }
+    return "Very easy";
+  }
+
+  $(document).ready(function() {
+    $('#registerForm').parsley().on('form:submit', function() {
+      const username = $('#username').val();
+      const email = $('#email').val();
+      const password = $('#password').val();
+
+      const maskedPassword = '*'.repeat(password.length);
+      const strength = getPasswordStrength(password);
+
+      const table = `
+        <h4 class="mt-4">Результат:</h4>
+        <table class="table table-bordered">
+          <tr><th>Username</th><td>${username}</td></tr>
+          <tr><th>Email</th><td>${email}</td></tr>
+          <tr><th>Password</th><td>${maskedPassword} (${strength})</td></tr>
+        </table>
+      `;
+      $('#registerResult').html(table);
+      return false; 
+    });
+
+    $('#userInfoForm').parsley().on('form:submit', function() {
+      const fullName = $('#fullName').val();
+      const birthday = $('#birthday').val();
+      const gender = $('#gender').val();
+      const avatarFile = $('#avatar')[0].files[0];
+
+      const avatarURL = URL.createObjectURL(avatarFile);
+
+      const table = `
+        <h4 class="mt-4">Результат:</h4>
+        <table class="table table-bordered">
+          <tr><th>Full Name</th><td>${fullName}</td></tr>
+          <tr><th>Birthday</th><td>${birthday}</td></tr>
+          <tr><th>Gender</th><td>${gender}</td></tr>
+          <tr><th>Avatar</th><td><img src="${avatarURL}" class="avatar-preview"></td></tr>
+        </table>
+      `;
+      $('#userInfoResult').html(table);
+      return false;
+    });
+  });
+</script>
+</body>
+</html>
